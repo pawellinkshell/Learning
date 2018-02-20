@@ -10,6 +10,10 @@ import java.beans.VetoableChangeSupport;
 
 public class User {
 
+  private static final String NAME = "name";
+  private static final String SURNAME = "surname";
+  private static final String AGE = "age";
+
   private String name;
   private String surname;
   private int age;
@@ -33,36 +37,48 @@ public class User {
   /*
    * Each setter should calling now `propertyChangeSupport` to have history about it
    */
-  public void setName(String name) throws PropertyVetoException {
+  public void setName(String name) {
     String old = this.name;
-    this.name = name;
-    vetoableChangeSupport.fireVetoableChange("name", old, name);
-    propertyChangeSupport.firePropertyChange("name", old, name);
+    try {
+      vetoableChangeSupport.fireVetoableChange(NAME, old, name);
+      this.name = name;
+    } catch (PropertyVetoException e) {
+      e.printStackTrace();
+    }
+    propertyChangeSupport.firePropertyChange(NAME, old, name);
   }
 
   public String getSurname() {
     return surname;
   }
 
-  public void setSurname(String surname) throws PropertyVetoException {
+  public void setSurname(String surname) {
     String old = this.surname;
-    this.surname = surname;
-    vetoableChangeSupport.fireVetoableChange("surname", old, surname);
-    propertyChangeSupport.firePropertyChange("surname", old, surname);
+    try {
+      vetoableChangeSupport.fireVetoableChange(SURNAME, old, surname);
+      this.surname = surname;
+    } catch (PropertyVetoException e) {
+      e.printStackTrace();
+    }
+    propertyChangeSupport.firePropertyChange(SURNAME, old, surname);
   }
 
   public int getAge() {
     return age;
   }
 
-  public void setAge(int age) throws PropertyVetoException {
+  public void setAge(int age)  {
     int old = this.age;
-    this.age = age;
-    vetoableChangeSupport.fireVetoableChange("age", old, age);
-    propertyChangeSupport.firePropertyChange("age", old, age);
+    try {
+      vetoableChangeSupport.fireVetoableChange(AGE, old, age);
+      this.age = age;
+    } catch (PropertyVetoException e) {
+      e.printStackTrace();
+    }
+    propertyChangeSupport.firePropertyChange(AGE, old, age);
   }
 
-  /*
+    /*
      *  This is delegated method.
      *  Delegated method means, that we inner method from some field are accesible directly
      */
@@ -96,8 +112,16 @@ public class User {
     user_1.addPropertyChangeListener(new MyPropertyChangeListener());
     user_1.addVetoableChangeListener(new MyVetoableChangeListener());
 
+    // Should pass changes
     user_1.setAge(19);
     user_1.setName("John");
+    System.out.println(user_1);
+
+    // Should veto be triggered, that's mean should be thrown an Exception
+    user_1.setName("Jo");
+    user_1.setSurname("As");
+    user_1.setAge(-1);
+    System.out.println("SIEMA");
     System.out.println(user_1);
   }
 
@@ -118,15 +142,37 @@ public class User {
 
   private static class MyVetoableChangeListener implements VetoableChangeListener {
 
+    private String eventName;
+
+    /*
+     * Veto policy
+     */
     @Override
-    public void vetoableChange(PropertyChangeEvent evt) throws PropertyVetoException {
-      System.out.println("******** VETOS ****************");
-      System.out.println("Name = " + evt.getPropertyName());
-      System.out.println("Old Value = " + evt.getOldValue());
-      System.out.println("New Value = " + evt.getNewValue());
-      System.out.println("Propagation = " + evt.getPropagationId());  // Meaningless
-      System.out.println("toString = " + evt.toString());             // Meaningless
-      System.out.println("**********************************");
+    public void vetoableChange(final PropertyChangeEvent evt) throws PropertyVetoException {
+      eventName = evt.getPropertyName();
+      if (eventName.equalsIgnoreCase(NAME)) {
+        String name = (String) evt.getNewValue();
+        if (name.length() <= 2) {
+          throw new PropertyVetoException("Name must be longer than 2 characters", evt);
+        }
+        return;
+      }
+
+      if (eventName.equalsIgnoreCase(SURNAME)) {
+        String surname = (String) evt.getNewValue();
+        if (surname.length() <= 2) {
+          throw new PropertyVetoException("Surname must be longer than 2 characters", evt);
+        }
+        return;
+      }
+
+      if (eventName.equalsIgnoreCase(AGE)) {
+        int age = (int) evt.getNewValue();
+        if ((age < 0) || (age >= 150)) {
+          throw new PropertyVetoException("Age must be between 0 and 150 inclusively", evt);
+        }
+        return;
+      }
     }
   }
 }

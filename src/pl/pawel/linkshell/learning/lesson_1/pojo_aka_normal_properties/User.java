@@ -12,9 +12,6 @@ public class User {
     this.age = age;
   }
 
-  /*
-     * Lazy initialization example for getting field
-     */
   public String getName() {
     return name;
   }
@@ -31,12 +28,6 @@ public class User {
     this.surname = surname;
   }
 
-  /*
-   * Notice that primitive types cannot be instantiated lazy,
-   * because they have been already created due to primitive this type behavior.
-   * In other words, primitive type has default value during the creation,
-   * that why this technique does have no impact in here
-   */
   public int getAge() {
     return age;
   }
@@ -44,7 +35,6 @@ public class User {
   public void setAge(int age) {
     this.age = age;
   }
-
 
   @Override
   public String toString() {
